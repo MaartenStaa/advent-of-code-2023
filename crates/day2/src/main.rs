@@ -5,6 +5,7 @@ fn main() {
     let games = parse_games(input);
 
     println!("possible games sum: {}", possible_games_sum(&games));
+    println!("game powers sum: {}", game_powers_sum(&games));
 }
 
 struct Game {
@@ -77,15 +78,50 @@ fn is_game_possible(game: &Game, red: u32, green: u32, blue: u32) -> bool {
     })
 }
 
-#[test]
-fn part1() {
-    let input = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+fn game_powers_sum(games: &[Game]) -> u32 {
+    games.iter().map(game_power).sum()
+}
+
+fn game_power(game: &Game) -> u32 {
+    // Find the lowest possible number of cubes that could have been used in
+    // this game. Then multiply them together to get the game's power.
+    let mut red = 0;
+    let mut green = 0;
+    let mut blue = 0;
+
+    for sample in game.samples.iter() {
+        if let Some(r) = sample.amounts.get(&Color::Red) {
+            red = red.max(*r);
+        }
+        if let Some(g) = sample.amounts.get(&Color::Green) {
+            green = green.max(*g);
+        }
+        if let Some(b) = sample.amounts.get(&Color::Blue) {
+            blue = blue.max(*b);
+        }
+    }
+
+    red * green * blue
+}
+
+#[cfg(test)]
+const TEST_INPUT: &str = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
 Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
-    let games = parse_games(input);
+
+#[test]
+fn part1() {
+    let games = parse_games(TEST_INPUT);
 
     assert_eq!(games.len(), 5);
     assert_eq!(possible_games_sum(&games), 8);
+}
+
+#[test]
+fn part2() {
+    let games = parse_games(TEST_INPUT);
+
+    assert_eq!(game_powers_sum(&games), 2286);
 }
