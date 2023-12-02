@@ -1,13 +1,15 @@
+use chumsky::{prelude::*, text::newline};
 use std::collections::HashMap;
 
 fn main() {
     let input = include_str!("input.txt");
-    let games = parse_games(input);
+    let games = games_parser().parse(input).unwrap();
 
     println!("possible games sum: {}", possible_games_sum(&games));
     println!("game powers sum: {}", game_powers_sum(&games));
 }
 
+#[derive(Debug)]
 struct Game {
     id: u32,
     samples: Vec<Sample>,
@@ -20,42 +22,39 @@ enum Color {
     Blue,
 }
 
+#[derive(Debug)]
 struct Sample {
     amounts: HashMap<Color, u32>,
 }
 
-fn parse_games(input: &str) -> Vec<Game> {
-    input.lines().map(parse_game).collect()
-}
+fn games_parser() -> impl Parser<char, Vec<Game>, Error = Simple<char>> {
+    let red = text::int(10)
+        .map(|n: String| n.parse().unwrap())
+        .then_ignore(just(" red"))
+        .map(|n| (Color::Red, n));
+    let green = text::int(10)
+        .map(|n: String| n.parse().unwrap())
+        .then_ignore(just(" green"))
+        .map(|n| (Color::Green, n));
+    let blue = text::int(10)
+        .map(|n: String| n.parse().unwrap())
+        .then_ignore(just(" blue"))
+        .map(|n| (Color::Blue, n));
 
-fn parse_game(input: &str) -> Game {
-    let (prefix, samples_text) = input.split_once(": ").unwrap();
-    let id = prefix.strip_prefix("Game ").unwrap().parse().unwrap();
+    let sample = choice((red, green, blue))
+        .separated_by(just(", "))
+        .collect()
+        .map(|amounts| Sample { amounts });
 
-    let samples = samples_text
-        .split("; ")
-        .map(|sample| {
-            let amounts = sample
-                .split(", ")
-                .map(|amount| {
-                    let (amount, color) = amount.split_once(" ").unwrap();
-                    let amount = amount.parse().unwrap();
-                    let color = match color {
-                        "red" => Color::Red,
-                        "green" => Color::Green,
-                        "blue" => Color::Blue,
-                        _ => panic!("unknown color: {}", color),
-                    };
-
-                    (color, amount)
-                })
-                .collect();
-
-            Sample { amounts }
-        })
-        .collect();
-
-    Game { id, samples }
+    just("Game ")
+        .ignore_then(text::int(10))
+        .map(|n: String| n.parse().unwrap())
+        .then_ignore(just(": "))
+        .then(sample.separated_by(just("; ")))
+        .map(|(id, samples)| Game { id, samples })
+        .separated_by(newline())
+        .at_least(5)
+        .collect()
 }
 
 fn possible_games_sum(games: &[Game]) -> u32 {
@@ -113,7 +112,7 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
 
 #[test]
 fn part1() {
-    let games = parse_games(TEST_INPUT);
+    let games = games_parser().parse(TEST_INPUT).unwrap();
 
     assert_eq!(games.len(), 5);
     assert_eq!(possible_games_sum(&games), 8);
@@ -121,7 +120,7 @@ fn part1() {
 
 #[test]
 fn part2() {
-    let games = parse_games(TEST_INPUT);
+    let games = games_parser().parse(TEST_INPUT).unwrap();
 
     assert_eq!(game_powers_sum(&games), 2286);
 }
