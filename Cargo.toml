@@ -1,4 +1,5 @@
 [workspace]
 members = [
     "crates/day1",
+    "crates/day2",
 ]
