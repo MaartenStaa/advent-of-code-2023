@@ -5,7 +5,7 @@ fn main() {
 
     println!(
         "part 1: {}",
-        grid.numbers_adjacent_to_symbols().into_iter().sum::<u32>(),
+        grid.numbers_adjacent_to_symbols().sum::<u32>(),
     );
     println!("part 2: {}", grid.gear_ratios().sum::<u32>(),);
 }
@@ -62,7 +62,7 @@ impl Grid {
         }
     }
 
-    fn numbers_adjacent_to_symbols(&self) -> Vec<u32> {
+    fn numbers_adjacent_to_symbols(&self) -> impl Iterator<Item = u32> + '_ {
         let mut number_indices = HashSet::new();
 
         for (i, cell) in self.grid.iter().enumerate() {
@@ -76,10 +76,7 @@ impl Grid {
             }
         }
 
-        number_indices
-            .into_iter()
-            .map(move |i| self.numbers[i])
-            .collect()
+        number_indices.into_iter().map(move |i| self.numbers[i])
     }
 
     fn gear_ratios(&self) -> impl Iterator<Item = u32> + '_ {
@@ -173,10 +170,7 @@ const TEST_INPUT: &str = "467..114..
 fn part1() {
     let grid = Grid::parse(TEST_INPUT);
 
-    assert_eq!(
-        grid.numbers_adjacent_to_symbols().into_iter().sum::<u32>(),
-        4361
-    );
+    assert_eq!(grid.numbers_adjacent_to_symbols().sum::<u32>(), 4361);
 }
 
 #[test]
