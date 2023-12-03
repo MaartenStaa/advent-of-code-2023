@@ -59,15 +59,7 @@ fn lines_sum_complex(input: &str) -> u32 {
 }
 
 fn lines_sum(input: &str, digits: impl Fn(&str) -> u32) -> u32 {
-    input
-        .lines()
-        .map(|line| {
-            let sum = digits(line);
-            let result = format!("{line} -> {sum}");
-            dbg!(result);
-            sum
-        })
-        .sum()
+    input.lines().map(digits).sum()
 }
 
 #[test]
