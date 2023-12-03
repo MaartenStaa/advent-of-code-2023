@@ -7,6 +7,7 @@ fn main() {
         "part 1: {}",
         grid.numbers_adjacent_to_symbols().into_iter().sum::<u32>(),
     );
+    println!("part 2: {}", grid.gear_ratios().sum::<u32>(),);
 }
 
 #[derive(Debug)]
@@ -81,6 +82,39 @@ impl Grid {
             .collect()
     }
 
+    fn gear_ratios(&self) -> impl Iterator<Item = u32> + '_ {
+        // Find all '*' cells that are adjacent to exactly two numbers. Multiply
+        // those together to get the gear ratio.
+        self.grid.iter().enumerate().filter_map(move |(i, cell)| {
+            if let GridCell::Symbol('*') = cell {
+                let adjacent_numbers: HashSet<usize> = self
+                    .adjacent_indices(i)
+                    .into_iter()
+                    .filter_map(|j| {
+                        if let GridCell::Number(n) = self.grid[j] {
+                            Some(n)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+
+                if adjacent_numbers.len() == 2 {
+                    Some(
+                        adjacent_numbers
+                            .into_iter()
+                            .map(|n| self.numbers[n])
+                            .product(),
+                    )
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        })
+    }
+
     fn adjacent_indices(&self, i: usize) -> Vec<usize> {
         let x = i % self.grid_width;
         let y = i / self.grid_width;
@@ -143,4 +177,12 @@ fn part1() {
         grid.numbers_adjacent_to_symbols().into_iter().sum::<u32>(),
         4361
     );
+}
+
+#[test]
+fn part2() {
+    let grid = Grid::parse(TEST_INPUT);
+    dbg!(&grid);
+
+    assert_eq!(grid.gear_ratios().sum::<u32>(), 467835);
 }
