@@ -42,18 +42,20 @@ fn games_parser() -> impl Parser<char, Vec<Game>, Error = Simple<char>> {
         .map(|n| (Color::Blue, n));
 
     let sample = choice((red, green, blue))
-        .separated_by(just(", "))
+        .separated_by(just(',').padded())
         .collect()
         .map(|amounts| Sample { amounts });
 
-    just("Game ")
+    text::keyword("Game")
+        .padded()
         .ignore_then(text::int(10))
         .map(|n: String| n.parse().unwrap())
-        .then_ignore(just(": "))
-        .then(sample.separated_by(just("; ")))
+        .then_ignore(just(':').padded())
+        .then(sample.separated_by(just(';').padded()))
         .map(|(id, samples)| Game { id, samples })
         .separated_by(newline())
-        .at_least(5)
+        .allow_trailing()
+        .then_ignore(end())
         .collect()
 }
 
