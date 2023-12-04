@@ -10,6 +10,24 @@ fn main() {
         "score sum: {}",
         cards.iter().map(|c| c.score()).sum::<u32>()
     );
+    println!("card count: {}", count_cards(&cards));
+}
+
+fn count_cards(cards: &[ScratchCard]) -> usize {
+    let mut card_counts = vec![1usize; cards.len()];
+    for (i, card) in cards.iter().enumerate() {
+        let current_card_amount = card_counts[i];
+        for offset in 1..=card.winning_number_count() {
+            let other_card_index = i + offset;
+            if other_card_index >= cards.len() {
+                break;
+            }
+
+            card_counts[other_card_index] += current_card_amount;
+        }
+    }
+
+    card_counts.iter().sum()
 }
 
 #[derive(Debug)]
@@ -22,16 +40,16 @@ struct ScratchCard {
 
 impl ScratchCard {
     fn score(&self) -> u32 {
-        let winning_number_count = self
-            .winning_numbers
-            .intersection(&self.card_numbers)
-            .count() as u32;
-
-        if winning_number_count == 0 {
-            0
-        } else {
-            2u32.pow(winning_number_count - 1)
+        match self.winning_number_count() as u32 {
+            0 => 0,
+            n => 2u32.pow(n - 1),
         }
+    }
+
+    fn winning_number_count(&self) -> usize {
+        self.winning_numbers
+            .intersection(&self.card_numbers)
+            .count()
     }
 }
 
@@ -78,4 +96,11 @@ fn day4_part1() {
     assert_eq!(cards[5].score(), 0);
 
     assert_eq!(cards.iter().map(|c| c.score()).sum::<u32>(), 13);
+}
+
+#[test]
+fn day4_part2() {
+    let cards = cards_parser().parse(TEST_INPUT).unwrap();
+
+    assert_eq!(count_cards(&cards), 30);
 }
