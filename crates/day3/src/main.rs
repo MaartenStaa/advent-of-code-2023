@@ -176,7 +176,6 @@ fn day3_part1() {
 #[test]
 fn day3_part2() {
     let grid = Grid::parse(TEST_INPUT);
-    dbg!(&grid);
 
     assert_eq!(grid.gear_ratios().sum::<u32>(), 467835);
 }
