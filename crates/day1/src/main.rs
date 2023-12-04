@@ -63,7 +63,7 @@ fn lines_sum(input: &str, digits: impl Fn(&str) -> u32) -> u32 {
 }
 
 #[test]
-fn part1() {
+fn day1_part1() {
     assert_eq!(lines_sum_simple("1122"), 12);
     assert_eq!(
         lines_sum_simple(
@@ -77,7 +77,7 @@ treb7uchet"
 }
 
 #[test]
-fn part2() {
+fn day1_part2() {
     assert_eq!(
         lines_sum_complex(
             "two1nine

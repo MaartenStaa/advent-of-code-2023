@@ -167,14 +167,14 @@ const TEST_INPUT: &str = "467..114..
 .664.598..";
 
 #[test]
-fn part1() {
+fn day3_part1() {
     let grid = Grid::parse(TEST_INPUT);
 
     assert_eq!(grid.numbers_adjacent_to_symbols().sum::<u32>(), 4361);
 }
 
 #[test]
-fn part2() {
+fn day3_part2() {
     let grid = Grid::parse(TEST_INPUT);
     dbg!(&grid);
 

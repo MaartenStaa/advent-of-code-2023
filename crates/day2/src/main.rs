@@ -113,7 +113,7 @@ Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
 
 #[test]
-fn part1() {
+fn day2_part1() {
     let games = games_parser().parse(TEST_INPUT).unwrap();
 
     assert_eq!(games.len(), 5);
@@ -121,7 +121,7 @@ fn part1() {
 }
 
 #[test]
-fn part2() {
+fn day2_part2() {
     let games = games_parser().parse(TEST_INPUT).unwrap();
 
     assert_eq!(game_powers_sum(&games), 2286);
