@@ -1,4 +1,5 @@
 use chumsky::prelude::*;
+use rayon::prelude::*;
 
 fn main() {
     let input = include_str!("input.txt");
@@ -12,6 +13,16 @@ fn main() {
             .map(|seed| almanac.resolve_seed_location(*seed))
             .min()
             .unwrap()
+    );
+    println!(
+        "Lowest mapped location with ranges: {}",
+        almanac
+            .seeds_from_ranges()
+            .collect::<Vec<_>>()
+            .into_par_iter()
+            .map(|s| almanac.resolve_seed_location(s))
+            .min()
+            .unwrap(),
     );
 }
 
@@ -142,6 +153,12 @@ impl Almanac {
 
         value
     }
+
+    fn seeds_from_ranges(&self) -> impl Iterator<Item = u64> + '_ {
+        self.seeds
+            .chunks(2)
+            .flat_map(move |chunk| (chunk[0]..(chunk[0] + chunk[1])))
+    }
 }
 
 impl Map {
@@ -218,4 +235,19 @@ fn day5_part1() {
     assert_eq!(almanac.resolve_seed_location(14), 43);
     assert_eq!(almanac.resolve_seed_location(55), 86);
     assert_eq!(almanac.resolve_seed_location(13), 35);
+}
+
+#[test]
+fn day5_part2() {
+    let almanac = almanac_parser().parse(TEST_INPUT).unwrap();
+
+    assert_eq!(almanac.seeds_from_ranges().count(), 27);
+    assert_eq!(
+        almanac
+            .seeds_from_ranges()
+            .map(|s| almanac.resolve_seed_location(s))
+            .min()
+            .unwrap(),
+        46
+    );
 }
