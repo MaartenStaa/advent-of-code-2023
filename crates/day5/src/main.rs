@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use chumsky::prelude::*;
 use rayon::prelude::*;
 
@@ -38,8 +40,7 @@ fn almanac_parser() -> impl Parser<char, Almanac, Error = Simple<char>> {
         .map(
             |((destination_range_start, source_range_start), source_range_length)| Mapping {
                 destination_range_start,
-                source_range_start,
-                source_range_length,
+                source_range: source_range_start..(source_range_start + source_range_length),
             },
         )
         .boxed();
@@ -132,8 +133,7 @@ struct Map {
 #[derive(Debug)]
 struct Mapping {
     destination_range_start: u64,
-    source_range_start: u64,
-    source_range_length: u64,
+    source_range: Range<u64>,
 }
 
 impl Almanac {
@@ -157,7 +157,7 @@ impl Almanac {
     fn seeds_from_ranges(&self) -> impl Iterator<Item = u64> + '_ {
         self.seeds
             .chunks(2)
-            .flat_map(move |chunk| (chunk[0]..(chunk[0] + chunk[1])))
+            .flat_map(|chunk| chunk[0]..(chunk[0] + chunk[1]))
     }
 }
 
@@ -175,10 +175,8 @@ impl Map {
 
 impl Mapping {
     fn resolve(&self, value: u64) -> Option<u64> {
-        if value >= self.source_range_start
-            && value < self.source_range_start + self.source_range_length
-        {
-            let offset = value - self.source_range_start;
+        if self.source_range.contains(&value) {
+            let offset = value - self.source_range.start();
             Some(self.destination_range_start + offset)
         } else {
             None
