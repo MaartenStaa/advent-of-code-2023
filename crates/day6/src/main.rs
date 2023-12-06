@@ -65,9 +65,6 @@ fn parse_part2(input: &str) -> Race {
     let time = lines
         .next()
         .unwrap()
-        .strip_prefix("Time:")
-        .unwrap()
-        .trim()
         .chars()
         .filter(|c| c.is_digit(10))
         .collect::<String>()
@@ -76,9 +73,6 @@ fn parse_part2(input: &str) -> Race {
     let distance = lines
         .next()
         .unwrap()
-        .strip_prefix("Distance:")
-        .unwrap()
-        .trim()
         .chars()
         .filter(|c| c.is_digit(10))
         .collect::<String>()
