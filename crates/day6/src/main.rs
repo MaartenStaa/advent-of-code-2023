@@ -17,7 +17,7 @@ struct Race {
 }
 
 fn count_ways_to_win(race: &Race) -> usize {
-    for button_press_time in 1..race.time {
+    for button_press_time in 1..(race.time / 2 + 1) {
         let speed = button_press_time;
         let remaining_time = race.time - button_press_time;
         let distance_traveled = speed * remaining_time;
