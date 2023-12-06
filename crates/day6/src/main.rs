@@ -1,6 +1,6 @@
 fn main() {
     let input = include_str!("input.txt");
-    let races = parse(input);
+    let races = parse_part1(input);
 
     println!(
         "Product of number of ways to win: {}",
@@ -9,8 +9,8 @@ fn main() {
 }
 
 struct Race {
-    time: u32,
-    distance: u32,
+    time: u64,
+    distance: u64,
 }
 
 fn count_ways_to_win(race: &Race) -> usize {
@@ -29,7 +29,7 @@ fn count_ways_to_win(race: &Race) -> usize {
     0
 }
 
-fn parse(input: &str) -> Vec<Race> {
+fn parse_part1(input: &str) -> Vec<Race> {
     let mut lines = input.lines();
     let times = lines
         .next()
@@ -63,7 +63,7 @@ Distance:  9  40  200";
 
 #[test]
 fn day6_part1() {
-    let races = parse(TEST_INPUT);
+    let races = parse_part1(TEST_INPUT);
 
     assert_eq!(count_ways_to_win(&races[0]), 4);
     assert_eq!(races.iter().map(count_ways_to_win).product::<usize>(), 288);
