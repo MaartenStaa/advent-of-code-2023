@@ -6,6 +6,9 @@ fn main() {
         "Product of number of ways to win: {}",
         races.iter().map(count_ways_to_win).product::<usize>()
     );
+
+    let race = parse_part2(input);
+    println!("Number of ways to win: {}", count_ways_to_win(&race));
 }
 
 struct Race {
@@ -57,6 +60,34 @@ fn parse_part1(input: &str) -> Vec<Race> {
         .collect()
 }
 
+fn parse_part2(input: &str) -> Race {
+    let mut lines = input.lines();
+    let time = lines
+        .next()
+        .unwrap()
+        .strip_prefix("Time:")
+        .unwrap()
+        .trim()
+        .chars()
+        .filter(|c| c.is_digit(10))
+        .collect::<String>()
+        .parse()
+        .unwrap();
+    let distance = lines
+        .next()
+        .unwrap()
+        .strip_prefix("Distance:")
+        .unwrap()
+        .trim()
+        .chars()
+        .filter(|c| c.is_digit(10))
+        .collect::<String>()
+        .parse()
+        .unwrap();
+
+    Race { time, distance }
+}
+
 #[cfg(test)]
 const TEST_INPUT: &str = "Time:      7  15   30
 Distance:  9  40  200";
@@ -67,4 +98,11 @@ fn day6_part1() {
 
     assert_eq!(count_ways_to_win(&races[0]), 4);
     assert_eq!(races.iter().map(count_ways_to_win).product::<usize>(), 288);
+}
+
+#[test]
+fn day6_part2() {
+    let race = parse_part2(TEST_INPUT);
+
+    assert_eq!(count_ways_to_win(&race), 71503);
 }
