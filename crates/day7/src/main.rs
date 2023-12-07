@@ -131,13 +131,7 @@ impl PartialOrd for Hand {
             return self_hand_type.partial_cmp(&other_hand_type);
         }
 
-        for (self_card, other_card) in self.0.iter().zip(other.0.iter()) {
-            if self_card != other_card {
-                return self_card.partial_cmp(other_card);
-            }
-        }
-
-        Some(std::cmp::Ordering::Equal)
+        self.0.partial_cmp(&other.0)
     }
 }
 
