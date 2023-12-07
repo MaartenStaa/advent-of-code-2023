@@ -15,6 +15,22 @@ fn main() {
             .map(|(i, e)| e.bid * (i + 1))
             .sum::<usize>()
     );
+
+    let mut entries = input
+        .lines()
+        .map(|line| Entry::try_parse(line, true))
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    entries.sort();
+
+    println!(
+        "Sum of win amounts with jokers: {}",
+        entries
+            .iter()
+            .enumerate()
+            .map(|(i, e)| e.bid * (i + 1))
+            .sum::<usize>()
+    );
 }
 
 #[derive(Debug, PartialEq, Eq, Ord)]
@@ -55,21 +71,36 @@ impl Hand {
 
     fn hand_type(&self) -> HandType {
         let mut counts = [0; 15];
+        let mut jokers = 0;
         for card in self.0.iter() {
+            if *card == 1 {
+                jokers += 1;
+                continue;
+            }
             counts[*card as usize] += 1;
         }
+
+        // Make sure to sort so we look at highest amounts first, and don't
+        // consume the jokers too early.
+        counts.sort();
 
         let mut pairs = 0;
         let mut three = false;
         let mut four = false;
         let mut five = false;
-        for count in counts.iter() {
-            match count {
-                2 => pairs += 1,
-                3 => three = true,
-                4 => four = true,
-                5 => five = true,
-                _ => (),
+        for count in counts.iter().rev() {
+            if *count + jokers == 5 {
+                five = true;
+                jokers = 0;
+            } else if *count + jokers == 4 {
+                four = true;
+                jokers = 0;
+            } else if *count + jokers == 3 {
+                three = true;
+                jokers = 0;
+            } else if *count + jokers == 2 {
+                pairs += 1;
+                jokers = 0;
             }
         }
 
@@ -154,8 +185,6 @@ fn day7_part1() {
 
     entries.sort();
 
-    dbg!(&entries);
-
     assert_eq!(
         entries
             .iter()
@@ -163,5 +192,29 @@ fn day7_part1() {
             .map(|(i, e)| e.bid * (i + 1))
             .sum::<usize>(),
         6440
+    );
+}
+
+#[test]
+fn day7_part2() {
+    let mut entries = TEST_INPUT
+        .lines()
+        .map(|line| Entry::try_parse(line, true))
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+
+    assert_eq!(entries[3].hand.hand_type(), HandType::FourOfAKind);
+    assert_eq!(entries[1].hand, Hand([10, 5, 5, 1, 5]));
+    assert_eq!(entries[1].hand.hand_type(), HandType::FourOfAKind);
+
+    entries.sort();
+
+    assert_eq!(
+        entries
+            .iter()
+            .enumerate()
+            .map(|(i, e)| e.bid * (i + 1))
+            .sum::<usize>(),
+        5905
     );
 }
