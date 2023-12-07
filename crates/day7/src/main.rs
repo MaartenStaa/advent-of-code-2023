@@ -2,7 +2,7 @@ fn main() {
     let input = include_str!("input.txt");
     let mut entries = input
         .lines()
-        .map(Entry::try_from)
+        .map(|line| Entry::try_parse(line, false))
         .collect::<Result<Vec<_>, _>>()
         .unwrap();
     entries.sort();
@@ -20,29 +20,6 @@ fn main() {
 #[derive(Debug, PartialEq, Eq, Ord)]
 struct Hand([u8; 5]);
 
-impl TryFrom<&str> for Hand {
-    type Error = ();
-
-    fn try_from(s: &str) -> Result<Self, Self::Error> {
-        let mut cards = [0; 5];
-        for (i, c) in s.chars().enumerate() {
-            match c {
-                'A' => cards[i] = 14,
-                'K' => cards[i] = 13,
-                'Q' => cards[i] = 12,
-                'J' => cards[i] = 11,
-                'T' => cards[i] = 10,
-                n if n.is_digit(10) && n != '0' && n != '1' => {
-                    cards[i] = n.to_digit(10).ok_or(())? as u8
-                }
-                _ => return Err(()),
-            }
-        }
-
-        Ok(Hand(cards))
-    }
-}
-
 #[derive(Debug, PartialEq, PartialOrd)]
 enum HandType {
     HighCard,
@@ -55,6 +32,27 @@ enum HandType {
 }
 
 impl Hand {
+    fn try_parse(s: &str, jokers: bool) -> Result<Self, ()> {
+        let mut cards = [0; 5];
+        for (i, c) in s.chars().enumerate() {
+            match c {
+                'A' => cards[i] = 14,
+                'K' => cards[i] = 13,
+                'Q' => cards[i] = 12,
+                'J' if !jokers => cards[i] = 11,
+                'T' => cards[i] = 10,
+                n if n.is_digit(10) && n != '0' && n != '1' => {
+                    cards[i] = n.to_digit(10).ok_or(())? as u8
+                }
+                // Joker
+                'J' if jokers => cards[i] = 1,
+                _ => return Err(()),
+            }
+        }
+
+        Ok(Hand(cards))
+    }
+
     fn hand_type(&self) -> HandType {
         let mut counts = [0; 15];
         for card in self.0.iter() {
@@ -124,12 +122,10 @@ impl PartialOrd for Entry {
     }
 }
 
-impl TryFrom<&str> for Entry {
-    type Error = ();
-
-    fn try_from(s: &str) -> Result<Self, Self::Error> {
+impl Entry {
+    fn try_parse(s: &str, jokers: bool) -> Result<Self, ()> {
         let mut parts = s.split_ascii_whitespace();
-        let hand = Hand::try_from(parts.next().ok_or(())?)?;
+        let hand = Hand::try_parse(parts.next().ok_or(())?, jokers)?;
         let bid = parts.next().unwrap().parse().unwrap();
 
         Ok(Entry { hand, bid })
@@ -147,7 +143,7 @@ QQQJA 483";
 fn day7_part1() {
     let mut entries = TEST_INPUT
         .lines()
-        .map(Entry::try_from)
+        .map(|line| Entry::try_parse(line, false))
         .collect::<Result<Vec<_>, _>>()
         .unwrap();
 
