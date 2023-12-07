@@ -1,0 +1,171 @@
+fn main() {
+    let input = include_str!("input.txt");
+    let mut entries = input
+        .lines()
+        .map(Entry::try_from)
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    entries.sort();
+
+    println!(
+        "Sum of win amounts: {}",
+        entries
+            .iter()
+            .enumerate()
+            .map(|(i, e)| e.bid * (i + 1))
+            .sum::<usize>()
+    );
+}
+
+#[derive(Debug, PartialEq, Eq, Ord)]
+struct Hand([u8; 5]);
+
+impl TryFrom<&str> for Hand {
+    type Error = ();
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        let mut cards = [0; 5];
+        for (i, c) in s.chars().enumerate() {
+            match c {
+                'A' => cards[i] = 14,
+                'K' => cards[i] = 13,
+                'Q' => cards[i] = 12,
+                'J' => cards[i] = 11,
+                'T' => cards[i] = 10,
+                n if n.is_digit(10) && n != '0' && n != '1' => {
+                    cards[i] = n.to_digit(10).ok_or(())? as u8
+                }
+                _ => return Err(()),
+            }
+        }
+
+        Ok(Hand(cards))
+    }
+}
+
+#[derive(Debug, PartialEq, PartialOrd)]
+enum HandType {
+    HighCard,
+    OnePair,
+    TwoPair,
+    ThreeOfAKind,
+    FullHouse,
+    FourOfAKind,
+    FiveOfAKind,
+}
+
+impl Hand {
+    fn hand_type(&self) -> HandType {
+        let mut counts = [0; 15];
+        for card in self.0.iter() {
+            counts[*card as usize] += 1;
+        }
+
+        let mut pairs = 0;
+        let mut three = false;
+        let mut four = false;
+        let mut five = false;
+        for count in counts.iter() {
+            match count {
+                2 => pairs += 1,
+                3 => three = true,
+                4 => four = true,
+                5 => five = true,
+                _ => (),
+            }
+        }
+
+        if five {
+            HandType::FiveOfAKind
+        } else if four {
+            HandType::FourOfAKind
+        } else if three && pairs == 1 {
+            HandType::FullHouse
+        } else if three {
+            HandType::ThreeOfAKind
+        } else if pairs == 2 {
+            HandType::TwoPair
+        } else if pairs == 1 {
+            HandType::OnePair
+        } else {
+            HandType::HighCard
+        }
+    }
+}
+
+impl PartialOrd for Hand {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        let self_hand_type = self.hand_type();
+        let other_hand_type = other.hand_type();
+
+        if self.hand_type() != other.hand_type() {
+            return self_hand_type.partial_cmp(&other_hand_type);
+        }
+
+        for (self_card, other_card) in self.0.iter().zip(other.0.iter()) {
+            if self_card != other_card {
+                return self_card.partial_cmp(other_card);
+            }
+        }
+
+        Some(std::cmp::Ordering::Equal)
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Ord)]
+struct Entry {
+    hand: Hand,
+    bid: usize,
+}
+
+impl PartialOrd for Entry {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.hand.partial_cmp(&other.hand)
+    }
+}
+
+impl TryFrom<&str> for Entry {
+    type Error = ();
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        let mut parts = s.split_ascii_whitespace();
+        let hand = Hand::try_from(parts.next().ok_or(())?)?;
+        let bid = parts.next().unwrap().parse().unwrap();
+
+        Ok(Entry { hand, bid })
+    }
+}
+
+#[cfg(test)]
+const TEST_INPUT: &str = "32T3K 765
+T55J5 684
+KK677 28
+KTJJT 220
+QQQJA 483";
+
+#[test]
+fn day7_part1() {
+    let mut entries = TEST_INPUT
+        .lines()
+        .map(Entry::try_from)
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+
+    assert_eq!(entries.len(), 5);
+    assert_eq!(entries[0].hand, Hand([3, 2, 10, 3, 13]));
+    assert_eq!(entries[0].bid, 765);
+    assert_eq!(entries[0].hand.hand_type(), HandType::OnePair);
+
+    entries.sort();
+
+    dbg!(&entries);
+
+    assert_eq!(
+        entries
+            .iter()
+            .enumerate()
+            .map(|(i, e)| e.bid * (i + 1))
+            .sum::<usize>(),
+        6440
+    );
+}
