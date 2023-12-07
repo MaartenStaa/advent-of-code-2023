@@ -30,7 +30,7 @@ fn main() {
 
 fn almanac_parser() -> impl Parser<char, Almanac, Error = Simple<char>> {
     let number = text::int(10).map(|s: String| s.parse().unwrap());
-    let number_list = number.clone().separated_by(just(' ')).collect();
+    let number_list = number.separated_by(just(' ')).collect();
 
     let mapping = number
         .then_ignore(just(' '))

@@ -1,3 +1,5 @@
+use std::cmp::Ordering;
+
 fn main() {
     let input = include_str!("input.txt");
     let mut entries = input
@@ -33,10 +35,10 @@ fn main() {
     );
 }
 
-#[derive(Debug, PartialEq, Eq, Ord)]
+#[derive(Debug, PartialEq, Eq)]
 struct Hand([u8; 5]);
 
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug, PartialEq, PartialOrd, Eq, Ord)]
 enum HandType {
     HighCard,
     OnePair,
@@ -55,13 +57,11 @@ impl Hand {
                 'A' => cards[i] = 14,
                 'K' => cards[i] = 13,
                 'Q' => cards[i] = 12,
-                'J' if !jokers => cards[i] = 11,
+                'J' => cards[i] = if jokers { 1 } else { 11 },
                 'T' => cards[i] = 10,
-                n if n.is_digit(10) && n != '0' && n != '1' => {
-                    cards[i] = n.to_digit(10).ok_or(())? as u8
+                n if n.is_ascii_digit() && n != '0' && n != '1' => {
+                    cards[i] = n.to_digit(10).expect("Already checked that `n` is a digit") as u8
                 }
-                // Joker
-                'J' if jokers => cards[i] = 1,
                 _ => return Err(()),
             }
         }
@@ -122,28 +122,40 @@ impl Hand {
     }
 }
 
-impl PartialOrd for Hand {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+impl Ord for Hand {
+    fn cmp(&self, other: &Self) -> Ordering {
         let self_hand_type = self.hand_type();
         let other_hand_type = other.hand_type();
 
         if self.hand_type() != other.hand_type() {
-            return self_hand_type.partial_cmp(&other_hand_type);
+            return self_hand_type.cmp(&other_hand_type);
         }
 
-        self.0.partial_cmp(&other.0)
+        self.0.cmp(&other.0)
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Ord)]
+impl PartialOrd for Hand {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
 struct Entry {
     hand: Hand,
     bid: usize,
 }
 
+impl Ord for Entry {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.hand.cmp(&other.hand)
+    }
+}
+
 impl PartialOrd for Entry {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.hand.partial_cmp(&other.hand)
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }
 

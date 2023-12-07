@@ -35,7 +35,7 @@ impl Grid {
 
         for line in lines {
             for c in line.chars() {
-                if c.is_digit(10) {
+                if c.is_ascii_digit() {
                     number_buffer.push(c);
                     grid.push(GridCell::Number(numbers.len()));
                 } else {

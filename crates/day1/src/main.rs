@@ -37,7 +37,7 @@ fn lines_sum_complex(input: &str) -> u32 {
         let mut remaining_str = line;
         let mut digits = Vec::new();
 
-        'outer: while remaining_str.len() > 0 {
+        'outer: while !remaining_str.is_empty() {
             for (name, digit) in &digit_names {
                 if remaining_str.starts_with(name) {
                     digits.push(*digit);
