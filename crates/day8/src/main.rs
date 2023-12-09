@@ -59,10 +59,16 @@ impl Network {
             just('R').to(Direction::Right),
         ])
         .labelled("direction");
-        let node = text::ident()
+        let node_name =
+            filter::<_, _, Simple<char>>(|c: &char| c.is_ascii_alphanumeric() || *c == '_')
+                .repeated()
+                .exactly(3)
+                .collect::<String>();
+
+        let node = node_name
             .labelled("source")
             .then_ignore(just(',').padded())
-            .then(text::ident())
+            .then(node_name)
             .labelled("destination")
             .delimited_by(just('('), just(')'))
             .map(|(left, right)| Node { left, right })
@@ -72,7 +78,7 @@ impl Network {
             .repeated()
             .then_ignore(text::newline().repeated().exactly(2))
             .then(
-                text::ident()
+                node_name
                     .labelled("node name")
                     .then_ignore(just('=').padded())
                     .then(node)
