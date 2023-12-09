@@ -6,6 +6,10 @@ fn main() {
     let network = Network::parser().parse(input).unwrap();
 
     println!("Number of steps: {}", count_steps(&network));
+    println!(
+        "Number of steps in parallel: {}",
+        count_steps_parallel(&network)
+    );
 }
 
 fn count_steps(network: &Network) -> usize {
@@ -32,6 +36,57 @@ fn count_steps(network: &Network) -> usize {
         .count()
         // Add 1 to account for the final step to ZZZ
         + 1
+}
+
+fn count_steps_parallel(network: &Network) -> usize {
+    // Find the path lenghts for each node starting with A
+    let denominators = network
+        .nodes
+        .iter()
+        .filter(|(name, _)| name.ends_with('A'))
+        .map(|(_, node)| {
+            let mut current_node = node;
+
+            network
+                .directions
+                .iter()
+                .cycle()
+                .take_while(|direction| {
+                    let destination = match direction {
+                        Direction::Left => &current_node.left,
+                        Direction::Right => &current_node.right,
+                    };
+                    current_node = network
+                        .nodes
+                        .get(destination)
+                        .expect("All nodes must be reachable");
+
+                    !destination.ends_with('Z')
+                })
+                .count()
+                + 1
+        })
+        .collect::<Vec<_>>();
+
+    // Find the lowest common multiple of the path lengths
+    lcm(&denominators)
+}
+
+fn lcm(input: &[usize]) -> usize {
+    let mut lcm = input[0];
+    for n in input {
+        lcm = lcm * n / gcd(lcm, *n);
+    }
+    lcm
+}
+
+fn gcd(mut a: usize, mut b: usize) -> usize {
+    while b != 0 {
+        let t = b;
+        b = a % b;
+        a = t;
+    }
+    a
 }
 
 #[derive(Debug, Clone)]
@@ -116,4 +171,22 @@ fn day8_part1() {
 
     let network = Network::parser().parse(TEST_INPUT_2).unwrap();
     assert_eq!(count_steps(&network), 6);
+}
+
+#[cfg(test)]
+const TEST_INPUT_3: &str = "LR
+
+11A = (11B, XXX)
+11B = (XXX, 11Z)
+11Z = (11B, XXX)
+22A = (22B, XXX)
+22B = (22C, 22C)
+22C = (22Z, 22Z)
+22Z = (22B, 22B)
+XXX = (XXX, XXX)";
+
+#[test]
+fn day8_part2() {
+    let network = Network::parser().parse(TEST_INPUT_3).unwrap();
+    assert_eq!(count_steps_parallel(&network), 6);
 }
