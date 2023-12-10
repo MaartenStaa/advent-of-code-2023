@@ -6,6 +6,10 @@ fn main() {
         "Furthest point from start: {}",
         grid.find_loop_furthest_point()
     );
+    println!(
+        "Number of cells enclosed in loop: {}",
+        grid.find_num_cells_enclosed_in_loop()
+    );
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -165,6 +169,27 @@ impl Grid {
         (self.find_loop().len() + 1) / 2
     }
 
+    fn find_num_cells_enclosed_in_loop(&self) -> usize {
+        let loop_ = self.find_loop();
+        let mut num_enclosed = 0;
+        let mut inside_loop = false;
+        for cell in &self.cells {
+            if loop_.contains(&cell.index) {
+                // Flip inside loop if crossing a vertical line.
+                match cell.cell {
+                    Cell::NorthSouth | Cell::NorthEast | Cell::NorthWest => {
+                        inside_loop = !inside_loop;
+                    }
+                    _ => {}
+                }
+            } else if inside_loop {
+                num_enclosed += 1;
+            }
+        }
+
+        num_enclosed
+    }
+
     fn find_loop(&self) -> Vec<usize> {
         // We know where we start, but not in which direction we need to go.
         // We can try all four directions and see which one leads us back to the
@@ -289,4 +314,34 @@ SJ.L7
 LJ...",
     );
     assert_eq!(grid.find_loop_furthest_point(), 8);
+}
+
+#[test]
+fn day10_part2() {
+    let grid = Grid::parse(
+        "...........
+.S-------7.
+.|F-----7|.
+.||.....||.
+.||.....||.
+.|L-7.F-J|.
+.|..|.|..|.
+.L--J.L--J.
+...........",
+    );
+    assert_eq!(grid.find_num_cells_enclosed_in_loop(), 4);
+
+    let grid = Grid::parse(
+        "FF7FSF7F7F7F7F7F---7
+L|LJ||||||||||||F--J
+FL-7LJLJ||||||LJL-77
+F--JF--7||LJLJ7F7FJ-
+L---JF-JLJ.||-FJLJJ7
+|F|F-JF---7F7-L7L|7|
+|FFJF7L7F-JF7|JL---7
+7-L-JL7||F7|L7F-7F7|
+L.L7LFJ|||||FJL7||LJ
+L7JLJL-JLJLJL--JLJ.L",
+    );
+    assert_eq!(grid.find_num_cells_enclosed_in_loop(), 10);
 }
