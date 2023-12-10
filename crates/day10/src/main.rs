@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 fn main() {
     let input = include_str!("input.txt");
     let grid = Grid::parse(input);
@@ -190,7 +192,7 @@ impl Grid {
         num_enclosed
     }
 
-    fn find_loop(&self) -> Vec<usize> {
+    fn find_loop(&self) -> HashSet<usize> {
         // We know where we start, but not in which direction we need to go.
         // We can try all four directions and see which one leads us back to the
         // start, checking if the tiles connect with us.
@@ -235,9 +237,10 @@ impl Grid {
         &self,
         start_index: usize,
         mut previous_direction: Direction,
-    ) -> Option<Vec<usize>> {
+    ) -> Option<HashSet<usize>> {
         let mut current_index = start_index;
-        let mut loop_ = vec![start_index];
+        let mut loop_ = HashSet::new();
+        loop_.insert(current_index);
 
         loop {
             // What direction are we going?
@@ -267,7 +270,7 @@ impl Grid {
             }
 
             // Add the cell to the loop.
-            loop_.push(connecting_cell.index);
+            loop_.insert(connecting_cell.index);
 
             // Check if we've reached the start again.
             if connecting_cell.cell.is_start() {
