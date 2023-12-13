@@ -13,7 +13,7 @@ struct Grid {
 }
 
 impl Grid {
-    fn get_reflection_position(&self, allow_flipping_bits: bool) -> Reflection {
+    fn get_reflection_position(&self, allowed_difference_count: usize) -> Reflection {
         let height = self.cells.len() / self.width;
         for x in 1..self.width {
             // Check if all cells to the left are the same as the ones to the right
@@ -36,11 +36,7 @@ impl Grid {
                 }
             }
 
-            if allow_flipping_bits {
-                if num_different == 1 {
-                    return Reflection::Vertical { before_column: x };
-                }
-            } else if num_different == 0 {
+            if num_different == allowed_difference_count {
                 return Reflection::Vertical { before_column: x };
             }
         }
@@ -68,11 +64,7 @@ impl Grid {
                 }
             }
 
-            if allow_flipping_bits {
-                if num_different == 1 {
-                    return Reflection::Horizontal { before_row: y };
-                }
-            } else if num_different == 0 {
+            if num_different == allowed_difference_count {
                 return Reflection::Horizontal { before_row: y };
             }
         }
@@ -117,7 +109,7 @@ fn parse(input: &str) -> Vec<Grid> {
 fn part1(grids: &[Grid]) -> usize {
     grids
         .iter()
-        .map(|grid| grid.get_reflection_position(false))
+        .map(|grid| grid.get_reflection_position(0))
         .map(|reflection| match reflection {
             Reflection::Vertical { before_column } => before_column,
             Reflection::Horizontal { before_row } => before_row * 100,
@@ -128,7 +120,7 @@ fn part1(grids: &[Grid]) -> usize {
 fn part2(grids: &[Grid]) -> usize {
     grids
         .iter()
-        .map(|grid| grid.get_reflection_position(true))
+        .map(|grid| grid.get_reflection_position(1))
         .map(|reflection| match reflection {
             Reflection::Vertical { before_column } => before_column,
             Reflection::Horizontal { before_row } => before_row * 100,
@@ -159,11 +151,11 @@ fn day13_part1() {
 
     assert_eq!(grids.len(), 2);
     assert_eq!(
-        grids[0].get_reflection_position(false),
+        grids[0].get_reflection_position(0),
         Reflection::Vertical { before_column: 5 }
     );
     assert_eq!(
-        grids[1].get_reflection_position(false),
+        grids[1].get_reflection_position(0),
         Reflection::Horizontal { before_row: 4 }
     );
     assert_eq!(part1(&grids), 405);
@@ -175,11 +167,11 @@ fn day13_part2() {
 
     assert_eq!(grids.len(), 2);
     assert_eq!(
-        grids[0].get_reflection_position(true),
+        grids[0].get_reflection_position(1),
         Reflection::Horizontal { before_row: 3 }
     );
     assert_eq!(
-        grids[1].get_reflection_position(true),
+        grids[1].get_reflection_position(1),
         Reflection::Horizontal { before_row: 1 }
     );
     assert_eq!(part2(&grids), 400);
