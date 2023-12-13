@@ -3,6 +3,7 @@ fn main() {
     let grids = parse(input);
 
     println!("Part 1: {}", part1(&grids));
+    println!("Part 2: {}", part2(&grids));
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -12,11 +13,11 @@ struct Grid {
 }
 
 impl Grid {
-    fn get_reflection_position(&self) -> Reflection {
+    fn get_reflection_position(&self, allow_flipping_bits: bool) -> Reflection {
         let height = self.cells.len() / self.width;
         for x in 1..self.width {
             // Check if all cells to the left are the same as the ones to the right
-            let mut all_same = true;
+            let mut num_different = 0;
             for offset in 0..(self.width - x) {
                 for y in 0..height {
                     let left = x.checked_sub(offset + 1);
@@ -28,22 +29,25 @@ impl Grid {
                             if self.cells[left + y * self.width]
                                 != self.cells[right + y * self.width]
                             {
-                                all_same = false;
-                                break;
+                                num_different += 1;
                             }
                         }
                     }
                 }
             }
 
-            if all_same {
+            if allow_flipping_bits {
+                if num_different == 1 {
+                    return Reflection::Vertical { before_column: x };
+                }
+            } else if num_different == 0 {
                 return Reflection::Vertical { before_column: x };
             }
         }
 
         for y in 1..height {
             // Check if all cells above are the same as the ones below
-            let mut all_same = true;
+            let mut num_different = 0;
             for offset in 0..(height - y) {
                 for x in 0..self.width {
                     let top = y.checked_sub(offset + 1);
@@ -57,15 +61,18 @@ impl Grid {
                             if self.cells[top * self.width + x]
                                 != self.cells[bottom * self.width + x]
                             {
-                                all_same = false;
-                                break;
+                                num_different += 1;
                             }
                         }
                     }
                 }
             }
 
-            if all_same {
+            if allow_flipping_bits {
+                if num_different == 1 {
+                    return Reflection::Horizontal { before_row: y };
+                }
+            } else if num_different == 0 {
                 return Reflection::Horizontal { before_row: y };
             }
         }
@@ -110,7 +117,18 @@ fn parse(input: &str) -> Vec<Grid> {
 fn part1(grids: &[Grid]) -> usize {
     grids
         .iter()
-        .map(|grid| grid.get_reflection_position())
+        .map(|grid| grid.get_reflection_position(false))
+        .map(|reflection| match reflection {
+            Reflection::Vertical { before_column } => before_column,
+            Reflection::Horizontal { before_row } => before_row * 100,
+        })
+        .sum()
+}
+
+fn part2(grids: &[Grid]) -> usize {
+    grids
+        .iter()
+        .map(|grid| grid.get_reflection_position(true))
         .map(|reflection| match reflection {
             Reflection::Vertical { before_column } => before_column,
             Reflection::Horizontal { before_row } => before_row * 100,
@@ -141,12 +159,28 @@ fn day13_part1() {
 
     assert_eq!(grids.len(), 2);
     assert_eq!(
-        grids[0].get_reflection_position(),
+        grids[0].get_reflection_position(false),
         Reflection::Vertical { before_column: 5 }
     );
     assert_eq!(
-        grids[1].get_reflection_position(),
+        grids[1].get_reflection_position(false),
         Reflection::Horizontal { before_row: 4 }
     );
     assert_eq!(part1(&grids), 405);
+}
+
+#[test]
+fn day13_part2() {
+    let grids = parse(TEST_INPUT);
+
+    assert_eq!(grids.len(), 2);
+    assert_eq!(
+        grids[0].get_reflection_position(true),
+        Reflection::Horizontal { before_row: 3 }
+    );
+    assert_eq!(
+        grids[1].get_reflection_position(true),
+        Reflection::Horizontal { before_row: 1 }
+    );
+    assert_eq!(part2(&grids), 400);
 }
