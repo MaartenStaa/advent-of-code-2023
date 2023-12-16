@@ -1,11 +1,14 @@
 use std::collections::HashSet;
 
+use rayon::prelude::*;
+
 fn main() {
     let input = include_str!("input.txt");
     let grid = Grid::parse(input);
 
     let energized_fields = grid.simulate_part1();
     println!("Part 1: {}", energized_fields.len());
+    println!("Part 2: {}", grid.simulate_part2());
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
@@ -88,12 +91,50 @@ impl Grid {
     }
 
     fn simulate_part1(&self) -> HashSet<Position> {
-        let mut energized_fields = HashSet::new();
-        let mut beams_seen = HashSet::new();
-        let mut beams = vec![Beam {
+        self.simulate(Beam {
             position: Position { x: 0, y: 0 },
             direction: Direction::Right,
-        }];
+        })
+    }
+
+    fn simulate_part2(&self) -> usize {
+        // Find the starting beam that will go through the most cells
+        let height = self.cells.len() / self.width;
+
+        // Top row going down
+        (0..self.width)
+            .into_par_iter()
+            .map(|x| Beam {
+                position: Position { x, y: 0 },
+                direction: Direction::Down,
+            })
+            // Left column going right
+            .chain((0..height).into_par_iter().map(|y| Beam {
+                position: Position { x: 0, y },
+                direction: Direction::Right,
+            }))
+            // Bottom row going up
+            .chain((0..self.width).into_par_iter().map(|x| Beam {
+                position: Position { x, y: height - 1 },
+                direction: Direction::Up,
+            }))
+            // Right column going left
+            .chain((0..height).into_par_iter().map(|y| Beam {
+                position: Position {
+                    x: self.width - 1,
+                    y,
+                },
+                direction: Direction::Left,
+            }))
+            .map(|beam| self.simulate(beam).len())
+            .max()
+            .unwrap()
+    }
+
+    fn simulate(&self, initial_beam: Beam) -> HashSet<Position> {
+        let mut energized_fields = HashSet::new();
+        let mut beams_seen = HashSet::new();
+        let mut beams = vec![initial_beam];
 
         let mut beams_to_remove = vec![];
         let height = self.cells.len() / self.width;
@@ -231,4 +272,11 @@ fn day16_part1() {
     let grid = Grid::parse(TEST_INPUT);
     let energized_fields = grid.simulate_part1();
     assert_eq!(energized_fields.len(), 46);
+}
+
+#[test]
+fn day16_part2() {
+    let grid = Grid::parse(TEST_INPUT);
+    let energized_fields = grid.simulate_part2();
+    assert_eq!(energized_fields, 51);
 }
